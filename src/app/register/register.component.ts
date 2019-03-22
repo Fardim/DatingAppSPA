@@ -12,13 +12,15 @@ export class RegisterComponent implements OnInit {
     constructor(private authService: AuthService) { }
 
     ngOnInit() { }
+
     register() {
-        this.authService.register(this.model).then(val => {
-            console.log('regval', val);
-        }).catch(error => {
-            console.log('regerror', error);
+        this.authService.register(this.model).subscribe(() => {
+            console.log('Registration succcessful');
+        }, error => {
+            console.log(error);
         });
     }
+
     cancel() {
         this.cancelRegister.emit(false);
     }

@@ -1,6 +1,7 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { map } from "rxjs/operators";
+import { map, catchError } from "rxjs/operators";
+import { throwError } from 'rxjs';
 
 @Injectable({
     providedIn: "root"
@@ -14,7 +15,7 @@ export class AuthService {
     login(model: any) {
         return this.http
             .post(this.baseUrl + "login", model, this.getHeader())
-            .subscribe(
+            .pipe(map(
                 (res: { tokenString: string }) => {
                     const user = res;
                     console.log("res", res);
@@ -23,17 +24,12 @@ export class AuthService {
                         this.userToken = user.tokenString;
                         console.log("Successfully logged in");
                     }
-                },
-                error => {
-                    console.log("failed to login");
                 }
-            );
+            ), catchError(this.handleError));
     }
 
     register(model) {
-        return this.http
-            .post(this.baseUrl + "register", model, this.getHeader())
-            .toPromise();
+        return this.http.post(this.baseUrl + "register", model, this.getHeader()).pipe(map(() => { }), catchError(this.handleError));
     }
 
     private getHeader() {
@@ -44,5 +40,22 @@ export class AuthService {
     logout() {
         this.userToken = null;
         localStorage.removeItem("token");
+    }
+
+    private handleError(error: any) {
+        const applicationError = error.headers.get('Application-Error');
+        if (applicationError) {
+            return throwError(applicationError);
+        }
+        const serverError = error.error;
+        let modelStateErrors = '';
+        if (serverError) {
+            for (const key in serverError) {
+                if (serverError[key]) {
+                    modelStateErrors += serverError[key] + '\n';
+                }
+            }
+        }
+        return throwError(modelStateErrors || 'Server error');
     }
 }
