@@ -16,10 +16,10 @@ export class ValueComponent implements OnInit {
   }
 
   getValues() {
-    this.http
-      .get("https://localhost:5001/api/values")
-      .subscribe((response: any) => {
-        this.values = response;
-      });
+    // this.http
+    //   .get("https://localhost:5001/api/values")
+    //   .subscribe((response: any) => {
+    //     this.values = response;
+    //   });
   }
 }
