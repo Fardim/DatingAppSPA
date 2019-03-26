@@ -1,5 +1,7 @@
+import { AlertifyService } from './../_services/alertify.service';
 import { AuthService } from "./../_services/auth.service";
 import { Component, OnInit } from "@angular/core";
+import { JwtHelperService } from '@auth0/angular-jwt';
 
 @Component({
   selector: "app-nav",
@@ -9,22 +11,26 @@ import { Component, OnInit } from "@angular/core";
 export class NavComponent implements OnInit {
   model: any = {};
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private alertify: AlertifyService) {}
 
   ngOnInit() {}
 
   login() {
     this.authService.login(this.model).subscribe(()=> {
-      console.log('successfully logged in');
+      this.alertify.success('successfully logged in');
     }, error => {
-      console.log('login error', error);
+      this.alertify.error(error);
     });
   }
   logout() {
-    this.authService.logout();
+    this.authService.userToken = null;
+    localStorage.removeItem("token");
+    this.alertify.messge("Logged out");
+    // this.authService.logout();
   }
   loggedIn() {
-    const token = localStorage.getItem("token");
-    return !!token;
+    // const token = localStorage.getItem("token");
+    // return !!token;
+    return this.authService.loggedIn();
   }
 }
