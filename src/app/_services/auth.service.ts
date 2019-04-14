@@ -1,44 +1,65 @@
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Injectable } from "@angular/core";
-import { map, catchError } from "rxjs/operators";
+import { User } from './../_models/User';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { map, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
-    providedIn: "root"
+    providedIn: 'root'
 })
 export class AuthService {
-    baseUrl = "https://localhost:44395/api/auth/";
+    baseUrl = 'https://localhost:44395/api/auth/';
     userToken: any;
     decodedToken: any;
+    currentUser: User;
     jwtHelper: JwtHelperService = new JwtHelperService();
+    private photourl = new BehaviorSubject<string>('../../assets/user.png');
+    currentPhotoUrl = this.photourl.asObservable();
 
-    constructor(private http: HttpClient) { }
+    constructor(private http: HttpClient) {}
 
+    changeMemberPhoto(photoUrl: string) {
+        this.photourl.next(photoUrl);
+    }
     login(model: any) {
         return this.http
-            .post(this.baseUrl + "login", model, this.getHeader())
-            .pipe(map(
-                (res: { tokenString: string }) => {
-                    const user = res;
-                    console.log("res", res);
-                    if (user) {
-                        localStorage.setItem("token", user.tokenString);
-                        this.decodedToken = this.jwtHelper.decodeToken(user.tokenString);
+            .post(this.baseUrl + 'login', model, this.getHeader())
+            .pipe(
+                map((res: { tokenString: string; user: User }) => {
+                    const userData = res;
+                    console.log('res', res);
+                    if (userData) {
+                        localStorage.setItem('token', userData.tokenString);
+                        localStorage.setItem(
+                            'user',
+                            JSON.stringify(userData.user)
+                        );
+                        this.decodedToken = this.jwtHelper.decodeToken(
+                            userData.tokenString
+                        );
                         console.log('decoded', this.decodedToken);
-                        this.userToken = user.tokenString;
-                        console.log("Successfully logged in");
+                        this.userToken = userData.tokenString;
+                        this.currentUser = userData.user;
+                        this.changeMemberPhoto(this.currentUser.photoUrl);
                     }
-                }
-            ), catchError(this.handleError));
+                }),
+                catchError(this.handleError)
+            );
     }
 
     register(model) {
-        return this.http.post(this.baseUrl + "register", model, this.getHeader()).pipe(map(() => { }), catchError(this.handleError));
+        return this.http
+            .post(this.baseUrl + 'register', model, this.getHeader())
+            .pipe(
+                map(() => {}),
+                catchError(this.handleError)
+            );
     }
 
     private getHeader() {
-        const headers = new HttpHeaders({ "Content-type": "application/json" });
+        const headers = new HttpHeaders({ 'Content-type': 'application/json' });
         return { headers: headers };
     }
     loggedIn() {
@@ -58,9 +79,16 @@ export class AuthService {
         const serverError = error.error;
         let modelStateErrors = '';
         if (serverError) {
-            for (const key in serverError) {
-                if (serverError[key]) {
-                    modelStateErrors += serverError[key] + '\n';
+            if (
+                typeof serverError === 'string' ||
+                serverError instanceof String
+            ) {
+                modelStateErrors = <string>serverError;
+            } else {
+                for (const key in serverError) {
+                    if (serverError[key]) {
+                        modelStateErrors += serverError[key] + '\n';
+                    }
                 }
             }
         }
