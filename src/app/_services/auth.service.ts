@@ -42,16 +42,20 @@ export class AuthService {
                         console.log('decoded', this.decodedToken);
                         this.userToken = userData.tokenString;
                         this.currentUser = userData.user;
-                        this.changeMemberPhoto(this.currentUser.photoUrl);
+                        if (this.currentUser.photoUrl !== null) {
+                            this.changeMemberPhoto(this.currentUser.photoUrl);
+                        } else {
+                            this.changeMemberPhoto('../../assets/user.png');
+                        }
                     }
                 }),
                 catchError(this.handleError)
             );
     }
 
-    register(model) {
+    register(user: User) {
         return this.http
-            .post(this.baseUrl + 'register', model, this.getHeader())
+            .post(this.baseUrl + 'register', user, this.getHeader())
             .pipe(
                 map(() => {}),
                 catchError(this.handleError)

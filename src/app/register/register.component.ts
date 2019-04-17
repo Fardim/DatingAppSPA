@@ -1,28 +1,112 @@
+import { User } from './../_models/User';
 import { AlertifyService } from './../_services/alertify.service';
-import { AuthService } from "./../_services/auth.service";
-import { Component, OnInit, Output, EventEmitter } from "@angular/core";
+import { AuthService } from './../_services/auth.service';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import {
+    FormBuilder,
+    FormGroup,
+    FormControl,
+    Validators
+} from '@angular/forms';
+import { BsDatepickerConfig } from 'ngx-bootstrap/datepicker/public_api';
+import { Router } from '@angular/router';
 
 @Component({
-    selector: "app-register",
-    templateUrl: "./register.component.html",
-    styleUrls: ["./register.component.css"]
+    selector: 'app-register',
+    templateUrl: './register.component.html',
+    styleUrls: ['./register.component.css']
 })
 export class RegisterComponent implements OnInit {
-    model: any = {};
     @Output() cancelRegister: EventEmitter<boolean> = new EventEmitter();
-    constructor(private authService: AuthService, private alertify: AlertifyService) { }
+    user: User;
+    registerForm: FormGroup;
+    colorTheme = 'theme-red';
+    bsConfig: Partial<BsDatepickerConfig>;
 
-    ngOnInit() { }
+    constructor(
+        private authService: AuthService,
+        private alertify: AlertifyService,
+        private fb: FormBuilder,
+        private router: Router
+    ) {}
+
+    ngOnInit() {
+        this.createRegisterForm();
+        this.bsConfig = { containerClass: this.colorTheme };
+    }
+
+    createRegisterForm() {
+        this.registerForm = this.fb.group(
+            {
+                gender: ['male'],
+                knownAs: ['', Validators.required],
+                city: ['', Validators.required],
+                country: ['', Validators.required],
+                dateOfBirth: [null, Validators.required],
+                username: ['', Validators.required],
+                password: [
+                    '',
+                    [
+                        Validators.required,
+                        Validators.minLength(4),
+                        Validators.maxLength(8)
+                    ]
+                ],
+                confirmPassword: ['', [Validators.required]]
+            },
+            { validator: this.passwordMatchValidator }
+        );
+    }
+
+    passwordMatchValidator(g: FormGroup) {
+        return g.get('password').value === g.get('confirmPassword').value
+            ? null
+            : { mismatch: true };
+    }
 
     register() {
-        this.authService.register(this.model).subscribe(() => {
-            this.alertify.success('Registration succcessful');
-        }, error => {
-            this.alertify.error(error);
-        });
+        if (this.registerForm.valid) {
+            this.user = Object.assign({}, this.registerForm.value);
+            console.log(this.user);
+            this.authService.register(this.user).subscribe(
+                () => {
+                    this.alertify.success('Registration succcessful');
+                },
+                error => {
+                    this.alertify.error(error);
+                },
+                () => {
+                    this.authService.login(this.user).subscribe(() => {
+                        this.router.navigate(['/members']);
+                    });
+                }
+            );
+        }
     }
 
     cancel() {
         this.cancelRegister.emit(false);
+    }
+
+    get username() {
+        return this.registerForm.get('username');
+    }
+    get password() {
+        return this.registerForm.get('password');
+    }
+    get confirmPassword() {
+        return this.registerForm.get('confirmPassword');
+    }
+    get knownAs() {
+        return this.registerForm.get('knownAs');
+    }
+    get city() {
+        return this.registerForm.get('city');
+    }
+    get country() {
+        return this.registerForm.get('country');
+    }
+    get dateOfBirth() {
+        return this.registerForm.get('dateOfBirth');
     }
 }
