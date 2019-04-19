@@ -33,6 +33,9 @@ import { NgxGalleryModule } from 'ngx-gallery';
 import { PhotoEditorComponent } from './members/photo-editor/photo-editor.component';
 import { FileUploadModule } from 'ng2-file-upload';
 import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+import { TimeAgoPipe } from 'time-ago-pipe';
+import { PaginationModule } from 'ngx-bootstrap';
+import { ButtonsModule } from 'ngx-bootstrap';
 
 @NgModule({
     declarations: [
@@ -47,7 +50,8 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
         MemberCardComponent,
         MemberDetailComponent,
         MemberEditComponent,
-        PhotoEditorComponent
+        PhotoEditorComponent,
+        TimeAgoPipe
     ],
     imports: [
         BrowserModule,
@@ -61,7 +65,9 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
         NgxGalleryModule,
         FileUploadModule,
         ReactiveFormsModule,
-        BsDatepickerModule.forRoot()
+        BsDatepickerModule.forRoot(),
+        PaginationModule.forRoot(),
+        ButtonsModule.forRoot()
     ],
     providers: [
         AuthService,

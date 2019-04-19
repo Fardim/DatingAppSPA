@@ -1,7 +1,8 @@
-import { catchError } from 'rxjs/operators';
+import { PaginatedResult } from './../_models/Pagination';
+import { catchError, tap } from 'rxjs/operators';
 import { User } from './../_models/User';
 import { map } from 'rxjs/operators';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { environment } from './../../environments/environment';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
@@ -13,12 +14,55 @@ export class UserService {
     baseUrl = environment.apiUrl;
 
     constructor(private http: HttpClient) {}
-
-    getUsers(): Observable<User[]> {
-        return this.http.get(this.baseUrl + 'users').pipe(
-            map((users: User[]) => users),
-            catchError(this.handleError)
-        );
+    //: Observable<PaginatedResult<User[]>>
+    getUsers(
+        page?: number,
+        itemsPerPage?: number,
+        userParams?: any
+    ): Observable<PaginatedResult<User[]>> {
+        const paginatedResult: PaginatedResult<User[]> = new PaginatedResult<
+            User[]
+        >();
+        let queryString = '?';
+        if (page != null && itemsPerPage != null) {
+            queryString +=
+                'pageNumber=' + page + '&pageSize=' + itemsPerPage + '&';
+        }
+        if (userParams != null) {
+            queryString +=
+                'minAge=' +
+                userParams.minAge +
+                '&maxAge=' +
+                userParams.maxAge +
+                '&gender=' +
+                userParams.gender +
+                '&orderBy=' +
+                userParams.orderBy;
+        }
+        // return this.http
+        //     .get(this.baseUrl + 'users' + queryString, { observe: 'response' })
+        //     .pipe(
+        //         tap((resp: HttpResponse<Object>) => {
+        //             console.log('resp', resp.body);
+        //             console.log('heaeder', resp.headers.get('Pagination'));
+        //             return resp;
+        //         })
+        //     );
+        return this.http
+            .get(this.baseUrl + 'users' + queryString, { observe: 'response' })
+            .pipe(
+                map((response: HttpResponse<Object>) => {
+                    console.log('response', response);
+                    paginatedResult.result = <User[]>response.body;
+                    if (response.headers.get('pagination') != null) {
+                        paginatedResult.pagination = JSON.parse(
+                            response.headers.get('pagination')
+                        );
+                    }
+                    return paginatedResult;
+                }),
+                catchError(this.handleError)
+            );
     }
 
     getUser(id: number): Observable<User> {
