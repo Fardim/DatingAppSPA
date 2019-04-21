@@ -70,12 +70,4 @@ export class MemberListComponent implements OnInit {
         this.pagination.itemsPerPage = event.itemsPerPage;
         this.loadUsers();
     }
-
-    // loadUsers() {
-    //   this.userService.getUsers().subscribe((users: User[]) => {
-    //     this.users = users;
-    //   }, error=> {
-    //     this.alertify.error(error);
-    //   })
-    // }
 }

@@ -36,6 +36,7 @@ import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { TimeAgoPipe } from 'time-ago-pipe';
 import { PaginationModule } from 'ngx-bootstrap';
 import { ButtonsModule } from 'ngx-bootstrap';
+import { ListsResolver } from './_resolvers/lists.resolver';
 
 @NgModule({
     declarations: [
@@ -77,7 +78,8 @@ import { ButtonsModule } from 'ngx-bootstrap';
         UserService,
         MemberDetailResolver,
         MemberListResolver,
-        MemberEditResolver
+        MemberEditResolver,
+        ListsResolver
     ],
     bootstrap: [AppComponent]
 })

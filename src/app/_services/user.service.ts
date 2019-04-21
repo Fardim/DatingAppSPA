@@ -14,11 +14,12 @@ export class UserService {
     baseUrl = environment.apiUrl;
 
     constructor(private http: HttpClient) {}
-    //: Observable<PaginatedResult<User[]>>
+
     getUsers(
         page?: number,
         itemsPerPage?: number,
-        userParams?: any
+        userParams?: any,
+        likesParam?: string
     ): Observable<PaginatedResult<User[]>> {
         const paginatedResult: PaginatedResult<User[]> = new PaginatedResult<
             User[]
@@ -37,17 +38,13 @@ export class UserService {
                 '&gender=' +
                 userParams.gender +
                 '&orderBy=' +
-                userParams.orderBy;
+                userParams.orderBy +
+                '&';
         }
-        // return this.http
-        //     .get(this.baseUrl + 'users' + queryString, { observe: 'response' })
-        //     .pipe(
-        //         tap((resp: HttpResponse<Object>) => {
-        //             console.log('resp', resp.body);
-        //             console.log('heaeder', resp.headers.get('Pagination'));
-        //             return resp;
-        //         })
-        //     );
+        if (likesParam != null) {
+            if (likesParam == 'Likers') queryString += 'Likers=true';
+            else queryString += 'Likees=true';
+        }
         return this.http
             .get(this.baseUrl + 'users' + queryString, { observe: 'response' })
             .pipe(
@@ -111,6 +108,15 @@ export class UserService {
         return { headers: headers };
     }
 
+    sendLike(userid: number, recipientId: number) {
+        return this.http
+            .post(this.baseUrl + 'users/' + userid + '/like/' + recipientId, {})
+            .pipe(
+                map(() => {}),
+                catchError(this.handleError)
+            );
+    }
+
     jwt() {
         let token = localStorage.getItem('token');
         if (token) {
@@ -122,6 +128,10 @@ export class UserService {
         }
     }
     private handleError(error: any) {
+        if (error.status === 400) {
+            console.log(error);
+            return throwError(error.error);
+        }
         const applicationError = error.headers.get('Application-Error');
         if (applicationError) {
             return throwError(applicationError);
