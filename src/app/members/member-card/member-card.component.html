@@ -12,6 +12,7 @@
                     <button
                         class="btn btn-primary"
                         [routerLink]="['/members/', user.id]"
+                        [queryParams]="{ tab: '0' }"
                     >
                         <i class="fa fa-user"></i>
                     </button>
@@ -22,7 +23,11 @@
                     </button>
                 </li>
                 <li>
-                    <button class="btn btn-primary">
+                    <button
+                        class="btn btn-primary"
+                        [routerLink]="['/members/', user.id]"
+                        [queryParams]="{ tab: '3' }"
+                    >
                         <i class="fa fa-envelope"></i>
                     </button>
                 </li>

@@ -1,3 +1,4 @@
+import { Message } from './../_models/Message';
 import { PaginatedResult } from './../_models/Pagination';
 import { catchError, tap } from 'rxjs/operators';
 import { User } from './../_models/User';
@@ -115,6 +116,96 @@ export class UserService {
                 map(() => {}),
                 catchError(this.handleError)
             );
+    }
+
+    getMessages(
+        userid: number,
+        page?: number,
+        itemsPerPage?: number,
+        messageContainer?: string
+    ): Observable<PaginatedResult<Message[]>> {
+        const paginatedResult: PaginatedResult<Message[]> = new PaginatedResult<
+            Message[]
+        >();
+        let queryString = '?';
+        if (page != null && itemsPerPage != null) {
+            queryString +=
+                'pageNumber=' + page + '&pageSize=' + itemsPerPage + '&';
+        }
+        if (messageContainer != null) {
+            queryString += 'messageContainer=' + messageContainer;
+        }
+        return this.http
+            .get(this.baseUrl + 'users/' + userid + '/messages' + queryString, {
+                observe: 'response'
+            })
+            .pipe(
+                map((response: HttpResponse<Object>) => {
+                    console.log('response', response);
+                    paginatedResult.result = <Message[]>response.body;
+                    if (response.headers.get('pagination') != null) {
+                        paginatedResult.pagination = JSON.parse(
+                            response.headers.get('pagination')
+                        );
+                    }
+                    return paginatedResult;
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    getMessageThread(
+        userid: number,
+        recipientId: number
+    ): Observable<Message[]> {
+        return this.http
+            .get(
+                this.baseUrl +
+                    'users/' +
+                    userid +
+                    '/messages/thread/' +
+                    recipientId
+            )
+            .pipe(
+                map((messages: Message[]) => {
+                    return messages;
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    sendMessage(userid: number, message: Message) {
+        return this.http
+            .post(this.baseUrl + 'users/' + userid + '/messages', message)
+            .pipe(
+                map((message: Message) => {
+                    return message;
+                }),
+                catchError(this.handleError)
+            );
+    }
+
+    deleteMessage(userid: number, id: number) {
+        return this.http
+            .post(this.baseUrl + 'users/' + userid + '/messages/' + id, {})
+            .pipe(
+                map(response => {}),
+                catchError(this.handleError)
+            );
+    }
+
+    markAsRead(userid: number, messageId: number) {
+        return this.http
+            .post(
+                this.baseUrl +
+                    'users/' +
+                    userid +
+                    '/messages/' +
+                    messageId +
+                    '/read',
+                {}
+            )
+            .subscribe();
     }
 
     jwt() {
