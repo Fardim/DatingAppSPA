@@ -1,8 +1,8 @@
+import { ErrorInterceptorProvider } from './_services/error.interceptor';
 import { MessagesResolver } from './_resolvers/message.resolver';
 import { PreventUnsavedChangesGuard } from './_guards/prevent-unsaved-changes.guard';
 import { MemberEditResolver } from './_resolvers/member-edit.resolver';
 import { MemberListResolver } from './_resolvers/member-list.resolver';
-import { JwtModule } from '@auth0/angular-jwt';
 import { AuthModule } from './auth/auth.module';
 import { MemberListComponent } from './members/member-list/member-list.component';
 import { UserService } from './_services/user.service';
@@ -39,6 +39,7 @@ import { PaginationModule } from 'ngx-bootstrap';
 import { ButtonsModule } from 'ngx-bootstrap';
 import { ListsResolver } from './_resolvers/lists.resolver';
 import { MemberMessagesComponent } from './members/member-messages/member-messages.component';
+import { NgxSpinnerModule } from 'ngx-spinner';
 
 @NgModule({
     declarations: [
@@ -71,7 +72,8 @@ import { MemberMessagesComponent } from './members/member-messages/member-messag
         ReactiveFormsModule,
         BsDatepickerModule.forRoot(),
         PaginationModule.forRoot(),
-        ButtonsModule.forRoot()
+        ButtonsModule.forRoot(),
+        NgxSpinnerModule
     ],
     providers: [
         AuthService,
@@ -83,7 +85,8 @@ import { MemberMessagesComponent } from './members/member-messages/member-messag
         MemberListResolver,
         MemberEditResolver,
         ListsResolver,
-        MessagesResolver
+        MessagesResolver,
+        ErrorInterceptorProvider
     ],
     bootstrap: [AppComponent]
 })

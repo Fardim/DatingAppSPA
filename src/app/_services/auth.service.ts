@@ -1,3 +1,4 @@
+import { AuthUser } from './../_models/authUser';
 import { User } from './../_models/User';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
@@ -5,12 +6,13 @@ import { map, catchError } from 'rxjs/operators';
 import { throwError } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 import { BehaviorSubject } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
     providedIn: 'root'
 })
 export class AuthService {
-    baseUrl = 'https://localhost:44395/api/auth/';
+    baseUrl = environment.apiUrl;
     userToken: any;
     decodedToken: any;
     currentUser: User;
@@ -25,9 +27,9 @@ export class AuthService {
     }
     login(model: any) {
         return this.http
-            .post(this.baseUrl + 'login', model, this.getHeader())
+            .post(this.baseUrl + 'auth/login', model, this.getHeader())
             .pipe(
-                map((res: { tokenString: string; user: User }) => {
+                map((res: AuthUser) => {
                     const userData = res;
                     console.log('res', res);
                     if (userData) {
@@ -48,18 +50,14 @@ export class AuthService {
                             this.changeMemberPhoto('../../assets/user.png');
                         }
                     }
-                }),
-                catchError(this.handleError)
+                })
             );
     }
 
     register(user: User) {
         return this.http
-            .post(this.baseUrl + 'register', user, this.getHeader())
-            .pipe(
-                map(() => {}),
-                catchError(this.handleError)
-            );
+            .post(this.baseUrl + 'auth/register', user, this.getHeader())
+            .pipe(map(() => {}));
     }
 
     private getHeader() {
@@ -68,34 +66,5 @@ export class AuthService {
     }
     loggedIn() {
         return !this.jwtHelper.isTokenExpired(localStorage.getItem('token'));
-    }
-
-    logout() {
-        // this.userToken = null;
-        // localStorage.removeItem("token");
-    }
-
-    private handleError(error: any) {
-        const applicationError = error.headers.get('Application-Error');
-        if (applicationError) {
-            return throwError(applicationError);
-        }
-        const serverError = error.error;
-        let modelStateErrors = '';
-        if (serverError) {
-            if (
-                typeof serverError === 'string' ||
-                serverError instanceof String
-            ) {
-                modelStateErrors = <string>serverError;
-            } else {
-                for (const key in serverError) {
-                    if (serverError[key]) {
-                        modelStateErrors += serverError[key] + '\n';
-                    }
-                }
-            }
-        }
-        return throwError(modelStateErrors || 'Server error');
     }
 }

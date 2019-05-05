@@ -1,10 +1,10 @@
-import { EventEmitter } from '@angular/core';
+import { EventEmitter, ChangeDetectorRef } from '@angular/core';
 import { Output } from '@angular/core';
 import { UserService } from 'src/app/_services/user.service';
 import { AuthService } from './../../_services/auth.service';
 import { Photo } from './../../_models/Photo';
 import { Component, OnInit, Input } from '@angular/core';
-import { FileUploader, FileUploaderOptions } from 'ng2-file-upload';
+import { FileUploader, FileUploaderOptions, FileItem } from 'ng2-file-upload';
 import { environment } from 'src/environments/environment';
 import { AlertifyService } from 'src/app/_services/alertify.service';
 import * as _ from 'underscore';
@@ -26,7 +26,8 @@ export class PhotoEditorComponent implements OnInit {
     constructor(
         private authService: AuthService,
         private userService: UserService,
-        private alertify: AlertifyService
+        private alertify: AlertifyService,
+        private changeDetector: ChangeDetectorRef
     ) {}
 
     ngOnInit() {
@@ -54,6 +55,10 @@ export class PhotoEditorComponent implements OnInit {
 
         this.uploader.onAfterAddingFile = file => {
             file.withCredentials = false; //To avoid cors error
+        };
+        this.uploader.onProgressItem = (fileItem: FileItem, progress: any) => {
+            console.log(fileItem);
+            console.log(progress);
         };
         this.uploader.onSuccessItem = (item, response, status, headers) => {
             if (response) {

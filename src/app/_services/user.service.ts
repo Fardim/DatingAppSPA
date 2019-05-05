@@ -3,7 +3,12 @@ import { PaginatedResult } from './../_models/Pagination';
 import { catchError, tap } from 'rxjs/operators';
 import { User } from './../_models/User';
 import { map } from 'rxjs/operators';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import {
+    HttpClient,
+    HttpHeaders,
+    HttpResponse,
+    HttpParams
+} from '@angular/common/http';
 import { environment } from './../../environments/environment';
 import { Injectable } from '@angular/core';
 import { Observable, throwError } from 'rxjs';
@@ -25,29 +30,29 @@ export class UserService {
         const paginatedResult: PaginatedResult<User[]> = new PaginatedResult<
             User[]
         >();
-        let queryString = '?';
+        let params = new HttpParams();
         if (page != null && itemsPerPage != null) {
-            queryString +=
-                'pageNumber=' + page + '&pageSize=' + itemsPerPage + '&';
+            params = params.append('pageNumber', page.toString());
+            params = params.append('pageSize', itemsPerPage.toString());
         }
         if (userParams != null) {
-            queryString +=
-                'minAge=' +
-                userParams.minAge +
-                '&maxAge=' +
-                userParams.maxAge +
-                '&gender=' +
-                userParams.gender +
-                '&orderBy=' +
-                userParams.orderBy +
-                '&';
+            params = params.append('minAge', userParams.minAge);
+            params = params.append('maxAge', userParams.maxAge);
+            params = params.append('gender', userParams.gender);
+            params = params.append('orderBy', userParams.orderBy);
         }
         if (likesParam != null) {
-            if (likesParam == 'Likers') queryString += 'Likers=true';
-            else queryString += 'Likees=true';
+            if (likesParam == 'Likers') {
+                params = params.append('Likers', 'true');
+            } else {
+                params = params.append('Likees', 'true');
+            }
         }
         return this.http
-            .get(this.baseUrl + 'users' + queryString, { observe: 'response' })
+            .get(this.baseUrl + 'users', {
+                observe: 'response',
+                params
+            })
             .pipe(
                 map((response: HttpResponse<Object>) => {
                     console.log('response', response);
@@ -58,50 +63,35 @@ export class UserService {
                         );
                     }
                     return paginatedResult;
-                }),
-                catchError(this.handleError)
+                })
             );
     }
 
     getUser(id: number): Observable<User> {
-        return this.http.get(this.baseUrl + 'users/' + id).pipe(
-            map((user: User) => user),
-            catchError(this.handleError)
-        );
+        return this.http.get<User>(this.baseUrl + 'users/' + id);
     }
 
     updateUser(id: number, user: User) {
-        return this.http.put(this.baseUrl + 'users/' + id, user).pipe(
-            map(() => {}),
-            catchError(this.handleError)
-        );
+        return this.http.put(this.baseUrl + 'users/' + id, user);
     }
 
     setMainPhoto(userId: number, photoId: number) {
-        return this.http
-            .post(
-                this.baseUrl +
-                    'users/' +
-                    userId +
-                    '/photos/' +
-                    photoId +
-                    '/setMain',
-                {},
-                this.getHeader()
-            )
-            .pipe(
-                map(() => {}),
-                catchError(this.handleError)
-            );
+        return this.http.post(
+            this.baseUrl +
+                'users/' +
+                userId +
+                '/photos/' +
+                photoId +
+                '/setMain',
+            {},
+            this.getHeader()
+        );
     }
 
     deletePhoto(userId: number, photoId: number) {
-        return this.http
-            .delete(this.baseUrl + 'users/' + userId + '/photos/' + photoId)
-            .pipe(
-                map(() => {}),
-                catchError(this.handleError)
-            );
+        return this.http.delete(
+            this.baseUrl + 'users/' + userId + '/photos/' + photoId
+        );
     }
 
     private getHeader() {
@@ -110,12 +100,10 @@ export class UserService {
     }
 
     sendLike(userid: number, recipientId: number) {
-        return this.http
-            .post(this.baseUrl + 'users/' + userid + '/like/' + recipientId, {})
-            .pipe(
-                map(() => {}),
-                catchError(this.handleError)
-            );
+        return this.http.post(
+            this.baseUrl + 'users/' + userid + '/like/' + recipientId,
+            {}
+        );
     }
 
     getMessages(
@@ -127,17 +115,18 @@ export class UserService {
         const paginatedResult: PaginatedResult<Message[]> = new PaginatedResult<
             Message[]
         >();
-        let queryString = '?';
+        let params = new HttpParams();
         if (page != null && itemsPerPage != null) {
-            queryString +=
-                'pageNumber=' + page + '&pageSize=' + itemsPerPage + '&';
+            params = params.append('pageNumber', page.toString());
+            params = params.append('pageSize', itemsPerPage.toString());
         }
         if (messageContainer != null) {
-            queryString += 'messageContainer=' + messageContainer;
+            params = params.append('messageContainer', messageContainer);
         }
         return this.http
-            .get(this.baseUrl + 'users/' + userid + '/messages' + queryString, {
-                observe: 'response'
+            .get(this.baseUrl + 'users/' + userid + '/messages', {
+                observe: 'response',
+                params
             })
             .pipe(
                 map((response: HttpResponse<Object>) => {
@@ -149,8 +138,7 @@ export class UserService {
                         );
                     }
                     return paginatedResult;
-                }),
-                catchError(this.handleError)
+                })
             );
     }
 
@@ -158,40 +146,23 @@ export class UserService {
         userid: number,
         recipientId: number
     ): Observable<Message[]> {
-        return this.http
-            .get(
-                this.baseUrl +
-                    'users/' +
-                    userid +
-                    '/messages/thread/' +
-                    recipientId
-            )
-            .pipe(
-                map((messages: Message[]) => {
-                    return messages;
-                }),
-                catchError(this.handleError)
-            );
+        return this.http.get<Message[]>(
+            this.baseUrl + 'users/' + userid + '/messages/thread/' + recipientId
+        );
     }
 
     sendMessage(userid: number, message: Message) {
-        return this.http
-            .post(this.baseUrl + 'users/' + userid + '/messages', message)
-            .pipe(
-                map((message: Message) => {
-                    return message;
-                }),
-                catchError(this.handleError)
-            );
+        return this.http.post<Message>(
+            this.baseUrl + 'users/' + userid + '/messages',
+            message
+        );
     }
 
     deleteMessage(userid: number, id: number) {
-        return this.http
-            .post(this.baseUrl + 'users/' + userid + '/messages/' + id, {})
-            .pipe(
-                map(response => {}),
-                catchError(this.handleError)
-            );
+        return this.http.post(
+            this.baseUrl + 'users/' + userid + '/messages/' + id,
+            {}
+        );
     }
 
     markAsRead(userid: number, messageId: number) {
@@ -218,32 +189,32 @@ export class UserService {
             return { headers: headers };
         }
     }
-    private handleError(error: any) {
-        if (error.status === 400) {
-            console.log(error);
-            return throwError(error.error);
-        }
-        const applicationError = error.headers.get('Application-Error');
-        if (applicationError) {
-            return throwError(applicationError);
-        }
-        console.log('err', error);
-        const serverError = error.error;
-        let modelStateErrors = '';
-        if (serverError) {
-            if (
-                typeof serverError === 'string' ||
-                serverError instanceof String
-            ) {
-                modelStateErrors = <string>serverError;
-            } else {
-                for (const key in serverError) {
-                    if (serverError[key]) {
-                        modelStateErrors += serverError[key] + '\n';
-                    }
-                }
-            }
-        }
-        return throwError(modelStateErrors || 'Server error');
-    }
+    // private handleError(error: any) {
+    //     if (error.status === 400) {
+    //         console.log(error);
+    //         return throwError(error.error);
+    //     }
+    //     const applicationError = error.headers.get('Application-Error');
+    //     if (applicationError) {
+    //         return throwError(applicationError);
+    //     }
+    //     console.log('err', error);
+    //     const serverError = error.error;
+    //     let modelStateErrors = '';
+    //     if (serverError) {
+    //         if (
+    //             typeof serverError === 'string' ||
+    //             serverError instanceof String
+    //         ) {
+    //             modelStateErrors = <string>serverError;
+    //         } else {
+    //             for (const key in serverError) {
+    //                 if (serverError[key]) {
+    //                     modelStateErrors += serverError[key] + '\n';
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return throwError(modelStateErrors || 'Server error');
+    // }
 }
